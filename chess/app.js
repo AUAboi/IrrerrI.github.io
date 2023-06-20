@@ -3,9 +3,8 @@
 
 const gameBoard = document.querySelector('.game-board')
 const playerDisplay = document.querySelector('.player-display')
+
 let draggedPiece
-let dropLocation
-let isValidMove
 
 
 
@@ -18,159 +17,174 @@ const knight = ('<div class="piece knight"><svg xmlns="http://www.w3.org/2000/sv
 const rook = ('<div class="piece rook"><svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 448 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M32 192V48c0-8.8 7.2-16 16-16h64c8.8 0 16 7.2 16 16V88c0 4.4 3.6 8 8 8h32c4.4 0 8-3.6 8-8V48c0-8.8 7.2-16 16-16h64c8.8 0 16 7.2 16 16V88c0 4.4 3.6 8 8 8h32c4.4 0 8-3.6 8-8V48c0-8.8 7.2-16 16-16h64c8.8 0 16 7.2 16 16V192c0 10.1-4.7 19.6-12.8 25.6L352 256l16 144H80L96 256 44.8 217.6C36.7 211.6 32 202.1 32 192zm176 96h32c8.8 0 16-7.2 16-16V224c0-17.7-14.3-32-32-32s-32 14.3-32 32v48c0 8.8 7.2 16 16 16zM22.6 473.4L64 432H384l41.4 41.4c4.2 4.2 6.6 10 6.6 16c0 12.5-10.1 22.6-22.6 22.6H38.6C26.1 512 16 501.9 16 489.4c0-6 2.4-11.8 6.6-16z"/></svg></div>')
 const pawn = ('<div class="piece pawn"><svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 320 512"><!--! Font Awesome Free 6.4.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M215.5 224c29.2-18.4 48.5-50.9 48.5-88c0-57.4-46.6-104-104-104S56 78.6 56 136c0 37.1 19.4 69.6 48.5 88H96c-17.7 0-32 14.3-32 32c0 16.5 12.5 30 28.5 31.8L80 400H240L227.5 287.8c16-1.8 28.5-15.3 28.5-31.8c0-17.7-14.3-32-32-32h-8.5zM22.6 473.4c-4.2 4.2-6.6 10-6.6 16C16 501.9 26.1 512 38.6 512H281.4c12.5 0 22.6-10.1 22.6-22.6c0-6-2.4-11.8-6.6-16L256 432H64L22.6 473.4z"/></svg></div>')
 
-
+const emptySqaure = "<div class='empty-square'></div>"
 
 const piecesOrigin = [
-    rook,knight,bishop,king,queen,bishop,knight,rook,
-    pawn,pawn,pawn,pawn,pawn,pawn,pawn,pawn,
-    '','','','','','','','',
-    '','','','','','','','',
-    '','','','','','','','',
-    '','','','','','','','',
-    pawn,pawn,pawn,pawn,pawn,pawn,pawn,pawn,
-    rook,knight,bishop,queen,king,bishop,knight,rook,
+  rook, knight, bishop, king, queen, bishop, knight, rook,
+  pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
+  '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '',
+  '', '', '', '', '', '', '', '',
+  pawn, pawn, pawn, pawn, pawn, pawn, pawn, pawn,
+  rook, knight, bishop, queen, king, bishop, knight, rook,
 ]
 
 const rowNumber = piecesOrigin.length / 8;
 let isWhiteTurn = true
-let validMove
-let dropSquare
 
 /////////////////////////////////////////////functions///////////////////////////////////////////////
-const createGame =() => {
-  piecesOrigin.forEach((pieceOrigin, i)=> {
-     const square = document.createElement('div');
-     square.setAttribute('square-id', i);
-     square.classList.add('square');
-     square.innerHTML = pieceOrigin;
-     gameBoard.appendChild(square);
-     if ((i % 2 === 0) ^ (i / rowNumber) % 2) {
-      square.classList.add('colored');}
+const createGame = () => {
+  piecesOrigin.forEach((pieceOrigin, i) => {
+    const square = document.createElement('div');
+    square.setAttribute('data-square-id', i);
+    square.classList.add('square');
+
+    //so we can use the parent method for empty as well
+    if (pieceOrigin === "") {
+      pieceOrigin = emptySqaure
+    }
+
+    square.innerHTML = pieceOrigin;
+
+    gameBoard.appendChild(square);
+    if ((i % 2 === 0) ^ (i / rowNumber) % 2) {
+      square.classList.add('colored');
+    }
   });
 };
 
-const setPlayer =() => {switch (isWhiteTurn) {
-  case true:
-    whitePieces.forEach(whitePiece => {
-      whitePiece.draggable = true;
-    });
-    blackPieces.forEach(blackPiece => {
-      blackPiece.draggable = false;
-    });
-    playerDisplay.innerHTML ='white turn'
-    break;
-    
-  case false:
-    whitePieces.forEach(whitePiece => {
-      whitePiece.draggable = false;
-    });
-    blackPieces.forEach(blackPiece => {
-      blackPiece.draggable = true;
-    });
-    playerDisplay.innerHTML ='black turn'
-    break;
-}
+const setPlayer = () => {
+  switch (isWhiteTurn) {
+    case true:
+      whitePieces.forEach(whitePiece => {
+        whitePiece.draggable = true;
+      });
+      blackPieces.forEach(blackPiece => {
+        blackPiece.draggable = false;
+      });
+      playerDisplay.innerHTML = 'white turn'
+      break;
+
+    case false:
+      whitePieces.forEach(whitePiece => {
+        whitePiece.draggable = false;
+      });
+      blackPieces.forEach(blackPiece => {
+        blackPiece.draggable = true;
+      });
+      playerDisplay.innerHTML = 'black turn'
+      break;
+  }
 }
 
-const checkValid = () => {
-  console.log(originSquare)
-  console.log(dropLocation.parentNode.getAttribute('square-id'))
-  if (draggedPiece.classList.contains('pawn')) {
-    if (draggedPiece.firstChild.classList.contains('whitepiece')) {
-      if (dropLocation.parentNode.getAttribute('square-id') == originSquare - 8) {
-        validMove = true;
+const checkValid = (dropLocation, dragged) => {
+  let squareId = dropLocation.parentNode.getAttribute('data-square-id')
+
+  if (dragged.classList.contains('pawn')) {
+    if (dragged.firstChild.classList.contains('whitepiece')) {
+      if (squareId == originSquare - 8) {
+        return true;
       }
     }
-  } else if (draggedPiece.classList.contains('knight') && draggedPiece.firstChild.classList.contains('whitepiece')) {
+  } else if (dragged.classList.contains('knight') && dragged.firstChild.classList.contains('whitepiece')) {
     if (
-      dropLocation.parentNode.getAttribute('square-id') == (originSquare - 18) ||
-      dropLocation.parentNode.getAttribute('square-id') == (originSquare - 14) ||
-      dropLocation.parentNode.getAttribute('square-id') == (originSquare - 10) ||
-      dropLocation.parentNode.getAttribute('square-id') == (originSquare - 6) ||
-      dropLocation.parentNode.getAttribute('square-id') == (originSquare + 18) ||
-      dropLocation.parentNode.getAttribute('square-id') == (originSquare + 14) ||
-      dropLocation.parentNode.getAttribute('square-id') == (originSquare + 10) ||
-      dropLocation.parentNode.getAttribute('square-id') == (originSquare + 6)
+      squareId == (originSquare - 18) ||
+      squareId == (originSquare - 14) ||
+      squareId == (originSquare - 10) ||
+      squareId == (originSquare - 6) ||
+      squareId == (originSquare + 18) ||
+      squareId == (originSquare + 14) ||
+      squareId == (originSquare + 10) ||
+      squareId == (originSquare + 6)
     ) {
-      validMove = true;
+      return true;
     }
-  } else if (draggedPiece.classList.contains('rook')){
+  } else if (dragged.classList.contains('rook')) {
     if (
-      (dropLocation.parentNode.getAttribute('square-id') - originSquare) % 8 === 0 ||
-      (dropLocation.parentNode.getAttribute('square-id') + originSquare) % 8 === 0
+      (squareId - originSquare) % 8 === 0 ||
+      (squareId + originSquare) % 8 === 0
     ) {
-      validMove = true;
+      return true;
     }
-  } else if (draggedPiece.classList.contains('king')) {
+  } else if (dragged.classList.contains('king')) {
     if (
-      dropLocation.parentNode.getAttribute('square-id') == originSquare - 1 ||
-      dropLocation.parentNode.getAttribute('square-id') == originSquare - 8 ||
-      dropLocation.parentNode.getAttribute('square-id') == originSquare + 8 ||
-      dropLocation.parentNode.getAttribute('square-id') == originSquare + 1
+      squareId == originSquare - 1 ||
+      squareId == originSquare - 8 ||
+      squareId == originSquare + 8 ||
+      squareId == originSquare + 1
     ) {
-      validMove = true;
+      return true;
     }
-  } else if (draggedPiece.classList.contains('queen')) {
+  } else if (dragged.classList.contains('queen')) {
     if (
-      (dropLocation.parentNode.getAttribute('square-id') - originSquare) % 8 === 0 ||
-      (dropLocation.parentNode.getAttribute('square-id') + originSquare) % 8 === 0
+      (squareId - originSquare) % 8 === 0 ||
+      (squareId + originSquare) % 8 === 0
     ) {
-      validMove = true;
+      return true;
     }
   } else {
-    validMove = false;
+    return true;
   }
 };
 
-  const commitMove = () => {
-    if (dropLocation.classList.contains('piece')){
-    dropSquare = dropLocation.parentNode
-    dropSquare.innerHTML = ('')
-    dropSquare.appendChild(draggedPiece)
-  } else if (dropLocation.classList.contains('square')){
-    dropLocation.appendChild(draggedPiece)
-  }
+const commitMove = (dropLocation, dragged) => {
+  let dropSquare = dropLocation.parentNode
+  let dragSquare = dragged.parentNode
+  dragSquare.innerHTML = emptySqaure
+  dropSquare.innerHTML = ""
+  dropSquare.appendChild(dragged)
+
   isWhiteTurn = !isWhiteTurn
-    setPlayer()
-  }
+  setPlayer()
+}
 
 
-  const pick = (e) => {
-    draggedPiece = e.target;
-    originSquare = e.target.parentNode.getAttribute('square-id')
+const pick = (e) => {
+  draggedPiece = e.target;
+  originSquare = e.target.parentNode.getAttribute('data-square-id')
 
 };
 
 const dragover = (e) => {
-    e.preventDefault();
+  e.preventDefault();
 }
 
 const drop = (e) => {
   e.preventDefault();
-  dropLocation = e.target
-  checkValid()
-  if (validMove == true){
-    console.log(validMove)
-    commitMove()
-  } }
+  let dropLocation = e.target
+  console.log(checkValid(dropLocation, draggedPiece))
+
+  if (checkValid(dropLocation, draggedPiece)) {
+    commitMove(dropLocation, draggedPiece)
+  }
+}
 
 
 ///////////////////////////////////////board////////////////////////////////////////////////
 createGame();
 
 const chessPieces = document.querySelectorAll('.piece')
-chessPieces.forEach(chessPiece =>{
-    chessPiece.addEventListener('dragstart', pick)
-    chessPiece.addEventListener('drop', drop)
-    chessPiece.addEventListener('dragover', dragover)
+const squares = document.querySelectorAll('.empty-square')
+
+squares.forEach(square => {
+  square.addEventListener('drop', drop)
+  square.addEventListener('dragover', dragover)
+
+})
+
+chessPieces.forEach(chessPiece => {
+  chessPiece.addEventListener('dragstart', pick)
+  chessPiece.addEventListener('drop', drop)
+  chessPiece.addEventListener('dragover', dragover)
 })
 
 const blackPieces = Array.from(chessPieces).splice(0, 16)
 const whitePieces = Array.from(chessPieces).splice(16, 31)
 
 blackPieces.forEach(blackPiece =>
-blackPiece.firstChild.classList.add('blackpiece'))
+  blackPiece.firstChild.classList.add('blackpiece'))
 whitePieces.forEach(whitePiece =>
-whitePiece.firstChild.classList.add('whitepiece'))
+  whitePiece.firstChild.classList.add('whitepiece'))
 
 setPlayer()
